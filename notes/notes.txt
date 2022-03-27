@@ -1,0 +1,4 @@
+C:\..\DotNetCoreToDoApp>dotnet tool install --global dotnet-ef
+C:\..\DotNetCoreToDoApp>dotnet ef --starup-project Demo --project Repository migrations add EfCoreToDoMigration
+C:\..\DotNetCoreToDoApp\Repository>dotnet ef migrations add Initial
+C:\..\DotNetCoreToDoApp>dotnet ef --startup-project Demo --project Repository database update
