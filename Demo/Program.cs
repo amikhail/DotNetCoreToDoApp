@@ -1,80 +1,115 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using Repository;
 
-ToDoRepository _repo = new ToDoRepository();
+//IToDoRepository _repo = new AdoNetSqliteToDoRepository();
 
-//insert todo items
-var todo = new ToDo()
+bool result = false;
+IToDoRepository _repo;
+ToDo todo;
+ToDo? todoToDelete;
+List<ToDo> todos;
+
+using (var dbContext = new EfCoreDbContext())
 {
-    Title = "Go Grocery Shopping",
-    Description = "milk,\r\ncoffee,\r\ncreamer,\r\neggs,\r\nbread,\r\n",
-    DueDate = new DateTime(2022, 03, 27, 16, 0, 0)
-};
-_repo.AddToDo(todo);
-
-todo = new ToDo()
-{
-    Title = "Doctor Appointment",
-    Description = "Doctor Appointment",
-    DueDate = new DateTime(2022, 03, 30, 11, 30, 0)
-};
-_repo.AddToDo(todo);
-
-todo = new ToDo()
-{
-    Title = "Christmas Party",
-    Description = "Open presents and have brunch.",
-    DueDate = new DateTime(2022, 12, 25, 10, 0, 0)
-};
-_repo.AddToDo(todo);
-
-//list all todo items
-List<ToDo> todos = _repo.GetAllToDo();
-foreach(var t in todos)
-{
-    Console.WriteLine($"Id:{t.Id}, Title:{t.Title}, Description:{t.Description}, LastModified:{t.LastModified,0:g}, DueDate:{t.DueDate,0:g}.");
-}
-
-//delete the last todo item
-var todoToDelete = todos.OrderByDescending(t => t.Id).FirstOrDefault();
-if (todoToDelete != null)
-{
-    bool result = _repo.DeleteToDo(todoToDelete.Id);
-    Console.WriteLine($"Deleted ToDo record with Id:{todoToDelete.Id}, Result:{result}.");
-
-    if (result)
+    using (_repo = new EfCoreSqliteToDoRepository(dbContext))
     {
-        //see if you can still find the todo item in the database
-        var todo2 =_repo.GetToDo(todoToDelete.Id);
-        if(todo2 != null)
+        //insert todo items
+        todo = new ToDo()
         {
-            Console.WriteLine($"Found ToDo record with Id:{todoToDelete.Id}.");
+            Title = "Go Grocery Shopping",
+            Description = "milk,\r\ncoffee,\r\ncreamer,\r\neggs,\r\nbread,\r\n",
+            DueDate = new DateTime(2022, 03, 27, 16, 0, 0)
+        };
+        _repo.AddToDo(todo);
+
+        todo = new ToDo()
+        {
+            Title = "Doctor Appointment",
+            Description = "Doctor Appointment",
+            DueDate = new DateTime(2022, 03, 30, 11, 30, 0)
+        };
+        _repo.AddToDo(todo);
+
+        todo = new ToDo()
+        {
+            Title = "Christmas Party",
+            Description = "Open presents and have brunch.",
+            DueDate = new DateTime(2022, 12, 25, 10, 0, 0)
+        };
+        _repo.AddToDo(todo);
+
+        //list all todo items
+        todos = _repo.GetAllToDo();
+        foreach (var t in todos)
+        {
+            Console.WriteLine($"Id:{t.Id}, Title:{t.Title}, Description:{t.Description}, LastModified:{t.LastModified,0:g}, DueDate:{t.DueDate,0:g}.");
         }
-        else
+
+        //delete the last todo item
+        todoToDelete = todos.OrderByDescending(t => t.Id).FirstOrDefault();
+        if (todoToDelete != null)
         {
-            Console.WriteLine($"Found no ToDo record with Id:{todoToDelete.Id}.");
+            result = _repo.DeleteToDo(todoToDelete.Id);
+            Console.WriteLine($"Deleted ToDo record with Id:{todoToDelete.Id}, Result:{result}.");
         }
     }
 }
 
-//add a week to the due date of the 1st todo item
-var todo3 = _repo.GetToDo(1);
-if (todo3 != null)
+using (var dbContext = new EfCoreDbContext())
 {
-    Console.WriteLine($"Found ToDo record with Id:1, Id from object:{todo3.Id}, Title:{todo3.Title}.");
-    todo3.DueDate.AddDays(7);
-    _repo.UpdateToDo(todo3);
-}
-else
-{
-    Console.WriteLine($"Found no ToDo record with Id:1.");
+    using (_repo = new EfCoreSqliteToDoRepository(dbContext))
+    {
+        if (result && todoToDelete != null)
+        {
+            //see if you can still find the todo item in the database
+            var todo2 = _repo.GetToDo(todoToDelete.Id);
+            if (todo2 != null)
+            {
+                Console.WriteLine($"Found ToDo record with Id:{todoToDelete.Id}.");
+            }
+            else
+            {
+                Console.WriteLine($"Found no ToDo record with Id:{todoToDelete.Id}.");
+            }
+        }
+        else
+        {
+            bool isNull = false;
+            if (todoToDelete == null)
+            {
+                isNull = true;
+            }
+            Console.Write($"Result:{result}, todoToDelete is null:{isNull}");
+        }
+
+        //add a week to the due date of the 1st todo item
+        var todo3 = _repo.GetToDo(1);
+        if (todo3 != null)
+        {
+            Console.WriteLine($"Found ToDo record with Id:1, Id from object:{todo3.Id}, Title:{todo3.Title}.");
+            todo3.DueDate = todo3.DueDate.AddDays(7);
+            result = _repo.UpdateToDo(todo3);
+            Console.WriteLine($"Result of updating ToDo record with Id:{todo3.Id}, DueDate:{todo3.DueDate}, Result:{result}.");
+            
+        }
+        else
+        {
+            Console.WriteLine($"Found no ToDo record with Id:1.");
+        }
+    }
 }
 
-//list all todo items again
-todos = _repo.GetAllToDo();
-foreach (var t in todos)
+using (var dbContext = new EfCoreDbContext())
 {
-    Console.WriteLine($"Id:{t.Id}, Title:{t.Title}, Description:{t.Description}, LastModified:{t.LastModified,0:g}, DueDate:{t.DueDate,0:g}.");
-}
+    using (_repo = new EfCoreSqliteToDoRepository(dbContext))
+    {
 
-_repo.Dispose();
+        //list all todo items again
+        todos = _repo.GetAllToDo();
+        foreach (var t in todos)
+        {
+            Console.WriteLine($"Id:{t.Id}, Title:{t.Title}, Description:{t.Description}, LastModified:{t.LastModified,0:g}, DueDate:{t.DueDate,0:g}.");
+        }
+
+    }
+}

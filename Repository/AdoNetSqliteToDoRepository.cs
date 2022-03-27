@@ -5,7 +5,7 @@ using System.Data;
 
 namespace Repository
 {
-    public class ToDoRepository : IDisposable
+    public class AdoNetSqliteToDoRepository : IToDoRepository
     {
         private const string ToDoTable =
             @"CREATE TABLE [ToDo](
@@ -18,7 +18,7 @@ namespace Repository
 
         private SqliteConnection Connection { get; set; }
 
-        public ToDoRepository() {
+        public AdoNetSqliteToDoRepository() {
             var conn = new SqliteConnection("Data Source=:memory:");
             Connection = conn;
             conn.Open();
@@ -164,7 +164,6 @@ namespace Repository
             p.Value = value;
             cmd.Parameters.Add(p);
         }
-
         public void Dispose()
         {
             if (Connection != null)
